@@ -40,7 +40,7 @@ result = Hinter.watch(my_file_pattern) do
 end
 ```
 
-- **"file_pattern"** file_pattern to\_watch
+- **"file_pattern"** file_pattern to\_watch as string
 - **"watch_dir"** dir watched
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
