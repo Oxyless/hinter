@@ -1,3 +1,3 @@
 # hinter
 
-![example](/assets/example.svg)
+![example](/assets/example.png)
