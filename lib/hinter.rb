@@ -57,6 +57,10 @@ class Hinter
     self
   end
 
+  def inspect
+    return @pretty
+  end
+
   private
 
   def active_record_callback
@@ -137,9 +141,5 @@ class Hinter
 
       @pretty << "\n"
     end
-  end
-
-  def inspect
-    return @pretty
   end
 end
