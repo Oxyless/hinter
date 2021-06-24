@@ -45,6 +45,10 @@ end
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
 
+# Compatility
+
+Rails 3, 4, 5, 6
+
 # License
 
 [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)
