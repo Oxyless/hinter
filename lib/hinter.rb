@@ -1,5 +1,11 @@
+require_relative "./hinters/print"
+require_relative "./hinters/utils"
+
 class Hinter  
   attr_reader :queries
+
+  include Hinters::Print
+  include Hinters::Utils
   
   def initialize(
     file_pattern: nil,
@@ -51,23 +57,6 @@ class Hinter
     self
   end
 
-  def top_query
-    top_queries(1)
-  end
-
-  def top_queries(limit = 1)
-    str_queries = []
-
-    @queries.first(limit).each do |query|
-      str_query = "#{query[:file_name]}:#{query[:line]} ".cyan
-      str_query += "\e[3m#{"#{query[:code]}"}\e[23m\n"
-      str_query += "#{"\e[1m(#{query[:time].round(@round_time)}s)\e[22m "} #{query[:sql].gray}\n"
-      str_queries << str_query
-    end
-
-    puts str_queries.join("\n")
-  end
-
   private
 
   def active_record_callback
@@ -79,30 +68,34 @@ class Hinter
         !(row =~ /#{@ignored}/) && 
         (!@file_pattern || row =~ /#{@file_pattern}/) 
       end.first(1).each do |row|
-        line_number = extract_line_number(row)
-        file_name = extract_file_name(row).to_sym
-        file_content = cached_file_content(file_name)
-
-        @metrics[:files][file_name] ||= {}
-        @metrics[:files][file_name][line_number] ||= { total_time: 0, nb_call: 0, queries: [] }
-        @metrics[:files][file_name][line_number][:total_time] += time
-        @metrics[:files][file_name][line_number][:nb_call] += 1
-       
-        query = {
-          file_name: file_name,
-          line: line_number,
-          time: time,      
-          sql: data[:sql],
-          code: (file_content ? file_content.lines[line_number - 1].strip : '-')
-        }
-
-        @queries << query
-        @metrics[:files][file_name][line_number][:queries] << query
+        analyse_row!(data, time, row)
       end
 
       @metrics[:global_sql_time] += time
       @metrics[:global_sql_call] += 1
     }
+  end
+
+  def analyse_row!(data, time, row)
+    line_number = extract_line_number(row)
+    file_name = extract_file_name(row).to_sym
+    file_content = cached_file_content(file_name)
+
+    @metrics[:files][file_name] ||= {}
+    @metrics[:files][file_name][line_number] ||= { total_time: 0, nb_call: 0, queries: [] }
+    @metrics[:files][file_name][line_number][:total_time] += time
+    @metrics[:files][file_name][line_number][:nb_call] += 1
+   
+    query = {
+      file_name: file_name,
+      line: line_number,
+      time: time,      
+      sql: data[:sql],
+      code: (file_content ? file_content.lines[line_number - 1].strip : '-')
+    }
+
+    @queries << query
+    @metrics[:files][file_name][line_number][:queries] << query
   end
 
   def enrich_data!
@@ -144,36 +137,6 @@ class Hinter
 
       @pretty << "\n"
     end
-  end
-
-  def pretty_rate(data)
-    str = "#{data[:rate_time]}% (total: #{data[:total_time]}s, #{pretty_call(data[:nb_call])})"
-
-    if data[:total_time] > @critical_time
-      str.red
-    elsif data[:total_time] > @warning_time
-      str.yellow
-    else
-      str
-    end
-  end
-
-  def pretty_call(nb_call)
-    "#{nb_call} #{nb_call > 1 ? "queries" : "query"}"
-  end
-
-  def cached_file_content(file)
-    @cached_file_content_ ||= {}
-    @cached_file_content_[file] ||= File.read(file.to_s) rescue "-"
-    @cached_file_content_[file]
-  end
-
-  def extract_line_number(row)
-    row.scan(/:(\d+):/).flatten.last.to_i
-  end
-
-  def extract_file_name(row)
-    row.split(":").first
   end
 
   def inspect
