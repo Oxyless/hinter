@@ -13,7 +13,7 @@ module Hinters
     end
 
     def pretty_call(nb_call)
-      "#{nb_call} #{nb_call > 1 ? "queries" : "query"}"
+      "#{nb_call}#{nb_call > 1 ? "⚡" : "⚡"}"
     end
 
     def top_query
