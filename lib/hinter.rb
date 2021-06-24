@@ -1,4 +1,6 @@
-class Hinter
+class Hinter  
+  attr_reader :queries
+  
   def initialize(
     file_pattern: nil,
     warning_time: 1,
@@ -30,14 +32,21 @@ class Hinter
   end
 
   def watch(&block)
-    ActiveSupport::Notifications.subscribed(active_record_callback, "sql.active_record") do
-      started_at = Time.current
-      block.call
-      @metrics[:global_time] = (Time.current - started_at)
-    end
+    old_logger = ActiveRecord::Base.logger
+    ActiveRecord::Base.logger = nil
+  
+    begin
+      ActiveSupport::Notifications.subscribed(active_record_callback, "sql.active_record") do
+        started_at = Time.current
+        block.call
+        @metrics[:global_time] = (Time.current - started_at)
+      end
 
-    enrich_data!
-    refresh_pretty!
+      enrich_data!
+      refresh_pretty!
+    ensure
+      ActiveRecord::Base.logger = old_logger
+    end
 
     self
   end
@@ -47,7 +56,16 @@ class Hinter
   end
 
   def top_queries(limit = 1)
-    @queries.first(limit)
+    str_queries = []
+
+    @queries.first(limit).each do |query|
+      str_query = "#{query[:file_name]}:#{query[:line]} ".cyan
+      str_query += "\e[3m#{"#{query[:code]}"}\e[23m\n"
+      str_query += "#{"\e[1m(#{query[:time].round(@round_time)}s)\e[22m "} #{query[:sql].gray}\n"
+      str_queries << str_query
+    end
+
+    puts str_queries.join("\n")
   end
 
   private
@@ -63,6 +81,7 @@ class Hinter
       end.first(1).each do |row|
         line_number = extract_line_number(row)
         file_name = extract_file_name(row).to_sym
+        file_content = cached_file_content(file_name)
 
         @metrics[:files][file_name] ||= {}
         @metrics[:files][file_name][line_number] ||= { total_time: 0, nb_call: 0, queries: [] }
@@ -74,6 +93,7 @@ class Hinter
           line: line_number,
           time: time,      
           sql: data[:sql],
+          code: (file_content ? file_content.lines[line_number - 1].strip : '-')
         }
 
         @queries << query
@@ -91,7 +111,7 @@ class Hinter
     @metrics[:files].keys.each do |file|
       @metrics[:files][file] = @metrics[:files][file].sort_by{|line, data| data[:total_time] }.reverse.to_h
 
-      file_content = File.read(file.to_s) rescue nil
+      file_content = cached_file_content(file)
 
       @metrics[:files][file].each do |line, data|
         data[:file] = file
@@ -110,10 +130,10 @@ class Hinter
   def refresh_pretty!
     active_record_rate = (@metrics[:global_sql_time] * 100 / @metrics[:global_time]).round(@round_time)
     global = "global: #{@metrics[:global_time].round(@round_time)}s"
-    sql = "sql: #{active_record_rate}% (totat: #{@metrics[:global_sql_time].round(@round_time)}s, #{pretty_call(@metrics[:global_sql_call])})"
+    sql = "sql: #{active_record_rate}% (total: #{@metrics[:global_sql_time].round(@round_time)}s, #{pretty_call(@metrics[:global_sql_call])})"
     ruby = "ruby: #{(100 - active_record_rate).round(@round_time)}% (total: #{(@metrics[:global_time] - @metrics[:global_sql_time]).round(@round_time)}s)"
-    #{self}
-    @pretty = "#{global.green} \e[35m#{sql}\e[0m #{ruby.blue}\n"
+
+    @pretty = "#{global.blue} \e[1m#{sql}\e[22m #{ruby.red}\n"
 
     @metrics[:files].keys.each do |file|
       @pretty << "#{file.to_s.cyan}\n"
@@ -140,6 +160,12 @@ class Hinter
 
   def pretty_call(nb_call)
     "#{nb_call} #{nb_call > 1 ? "queries" : "query"}"
+  end
+
+  def cached_file_content(file)
+    @cached_file_content_ ||= {}
+    @cached_file_content_[file] ||= File.read(file.to_s) rescue "-"
+    @cached_file_content_[file]
   end
 
   def extract_line_number(row)
