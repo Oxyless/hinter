@@ -45,7 +45,7 @@ end
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
 
-# Compatility
+# Compatibility
 
 Rails 3, 4, 5, 6
 
