@@ -12,7 +12,7 @@ module Hinters
     
       def instrument_source(source, separator: nil)
         source.each_with_index do |row, idx|
-          if !separator || row.strip =~ separator
+          if (!separator && row.present?)|| row.strip =~ separator
             source[idx] = <<~RUBY
               __start_at = Time.current;
               #{row}
