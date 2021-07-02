@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = %q{hinter}
-  s.version = "1.0.2"
+  s.version = "1.1.2"
   s.authors = "oxyless"
   s.date = %q{2020-06-23}
   s.summary = %q{hinter}

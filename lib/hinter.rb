@@ -1,11 +1,13 @@
 require_relative "./hinters/print"
 require_relative "./hinters/utils"
+require_relative "./hinters/ruby"
 
 class Hinter  
   attr_reader :queries
 
   include Hinters::Print
   include Hinters::Utils
+  include Hinters::Ruby
   
   def initialize(
     file_pattern: nil,
