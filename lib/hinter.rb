@@ -1,62 +1,101 @@
-require_relative "./hinters/print"
-require_relative "./hinters/utils"
+require_relative "./helpers/print"
+require_relative "./helpers/utils"
+require_relative "./helpers/color"
+
+require_relative "./hinters/metrics"
+require_relative "./hinters/list"
 require_relative "./hinters/ruby"
 
 class Hinter  
-  attr_reader :queries
+  attr_reader :metrics, :callstacks
 
-  include Hinters::Print
-  include Hinters::Utils
-  include Hinters::Ruby
+  include Helpers::Print
+  include Helpers::Utils
+  include Helpers::Color
   
   def initialize(
     file_pattern: nil,
     warning_time: 1,
     critical_time: 5,
+    warning_sql_call: 10,
+    critical_sql_call: 100,
     round_time: 2,
+    colors: true,
     watch_dir: /\/app\//,
     ignored: /(\/gems\/|\(pry\)|bin\/rails|hinter)/
   )
-    @file_pattern = file_pattern
-    @warning_time = warning_time
-    @critical_time = critical_time
-    @round_time = round_time
-    @watch_dir = watch_dir
-    @ignored = ignored
+    @old_logger = ActiveRecord::Base.logger
 
-    @pretty = ""
-    @queries = []
-
-    @metrics = {
-      global_time: 0, 
-      global_sql_time: 0, 
-      global_sql_call: 0, 
-      files: {} 
+    @options = {
+      file_pattern: file_pattern,
+      warning_time: warning_time,
+      critical_time: critical_time,
+      warning_sql_call: warning_sql_call,
+      critical_sql_call: critical_sql_call,
+      round_time: round_time,
+      colors: (colors == true),
+      watch_dir: watch_dir,
+      ignored: ignored
     }
+
+    @started_at = nil
+    @subscriber =nil
+    @pretty = ""
+
+    @callstacks = {}
+    @metrics = Hinters::Metrics.new(round_time: round_time)  
   end
 
-  def self.watch(file_pattern = nil, &block)
-    Hinter.new(file_pattern: file_pattern).watch(&block)
+  def self.watch(**options)
+    if block_given?
+      Hinter.new(**options).watch { yield }
+    else
+      Hinter.new(**options).watch
+    end
   end
 
-  def watch(&block)
-    old_logger = ActiveRecord::Base.logger
+  def watch(context = nil, source: nil)
     ActiveRecord::Base.logger = nil
-  
-    begin
-      ActiveSupport::Notifications.subscribed(active_record_callback, "sql.active_record") do
-        started_at = Time.current
-        block.call
-        @metrics[:global_time] = (Time.current - started_at)
+    @started_at = Time.current
+
+    if context
+      if block_given?
+        Hinters::Ruby.new(context, @options, source: source).watch { yield } 
+      else
+        Hinters::Ruby.new(context, @options, source: source).watch
+      end
+    else
+      if block_given?
+        watch_block { yield }
+      else
+        @subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") { |*args| active_record_callback.call(*args) }
       end
 
-      enrich_data!
+      self
+    end 
+  end
+
+  def stop
+    if @started_at
+      ActiveRecord::Base.logger = @old_logger
+
+      if @subscriber
+        ActiveSupport::Notifications.unsubscribe(@subscriber)
+        @subscriber = nil
+      end
+    
+      @metrics.global_time = (Time.current - @started_at)
+      @metrics.enrich_data!
       refresh_pretty!
-    ensure
-      ActiveRecord::Base.logger = old_logger
+
+      @started_at = nil
     end
 
     self
+  end
+
+  def expand(caller_id)
+    @callstacks[caller_id]
   end
 
   def inspect
@@ -65,32 +104,47 @@ class Hinter
 
   private
 
+  def watch_block(&block)
+    ActiveSupport::Notifications.subscribed(active_record_callback, "sql.active_record") do
+      yield
+      @metrics.global_time = (Time.current - @started_at)
+    end
+
+    @metrics.enrich_data!
+    refresh_pretty!
+  end
+
   def active_record_callback
     lambda { |name, started, finished, unique_id, data|
       time = (finished - started)
-      
-      caller.select do |row| 
-        row =~ /#{@watch_dir}/ && 
-        !(row =~ /#{@ignored}/) && 
-        (!@file_pattern || row =~ /#{@file_pattern}/) 
-      end.first(1).each do |row|
-        analyse_row!(data, time, row)
+      callstack = caller.select do |row| 
+        row =~ /#{@options[:watch_dir]}/ && 
+        !(row =~ /#{@options[:ignored]}/) && 
+        (!@options[:file_pattern] || row =~ /#{@options[:file_pattern]}/) 
       end
 
-      @metrics[:global_sql_time] += time
-      @metrics[:global_sql_call] += 1
+      last_on_stack = callstack.first(1)[0]
+      last_on_stack = caller.last if !last_on_stack
+
+      analyse_row!(data, time, last_on_stack, callstack.presence || caller)
+
+      @metrics.global_sql_time += time
+      @metrics.global_sql_call += 1
     }
   end
 
-  def analyse_row!(data, time, row)
+  def analyse_row!(data, time, row, callstack)
     line_number = extract_line_number(row)
     file_name = extract_file_name(row).to_sym
-    file_content = cached_file_content(file_name)
+    file_content = @metrics.cached_file_content(file_name)
 
-    @metrics[:files][file_name] ||= {}
-    @metrics[:files][file_name][line_number] ||= { total_time: 0, nb_call: 0, queries: [] }
-    @metrics[:files][file_name][line_number][:total_time] += time
-    @metrics[:files][file_name][line_number][:nb_call] += 1
+    @callstacks["#{file_name}##{line_number}"] ||= callstack
+    @callstacks[line_number] ||= callstack
+    
+    @metrics.files[file_name] ||= {}
+    @metrics.files[file_name][line_number] ||= { total_time: 0, nb_call: 0, queries: [] }
+    @metrics.files[file_name][line_number][:total_time] += time
+    @metrics.files[file_name][line_number][:nb_call] += 1
    
     query = {
       file_name: file_name,
@@ -100,48 +154,7 @@ class Hinter
       code: (file_content ? file_content.lines[line_number - 1].strip : '-')
     }
 
-    @queries << query
-    @metrics[:files][file_name][line_number][:queries] << query
-  end
-
-  def enrich_data!
-    @queries = @queries.sort_by{|query| query[:time] }.reverse
-
-    @metrics[:files].keys.each do |file|
-      @metrics[:files][file] = @metrics[:files][file].sort_by{|line, data| data[:total_time] }.reverse.to_h
-
-      file_content = cached_file_content(file)
-
-      @metrics[:files][file].each do |line, data|
-        data[:file] = file
-        data[:queries] = data[:queries].sort_by{|query| query[:time] }.reverse
-        data[:rate_time] = (data[:total_time] * 100 / @metrics[:global_sql_time]).to_f.round(2)
-        data[:total_time] =  data[:total_time].to_f.round(@round_time)
-        data[:code] = (file_content ? file_content.lines[line - 1].strip : '-')
-      end
-    end
-
-    @metrics[:files] = @metrics[:files].sort_by do |file, lines|
-      lines.values.map{ |value| value[:total_time] } || 0
-    end.reverse.to_h
-  end
-
-  def refresh_pretty!
-    active_record_rate = (@metrics[:global_sql_time] * 100 / @metrics[:global_time]).round(@round_time)
-    global = "global: #{@metrics[:global_time].round(@round_time)}s"
-    sql = "sql: #{active_record_rate}% (total: #{@metrics[:global_sql_time].round(@round_time)}s, #{pretty_call(@metrics[:global_sql_call])})"
-    ruby = "ruby: #{(100 - active_record_rate).round(@round_time)}% (total: #{(@metrics[:global_time] - @metrics[:global_sql_time]).round(@round_time)}s)"
-
-    @pretty = "#{global.blue} \e[1m#{sql}\e[22m #{ruby.red}\n"
-
-    @metrics[:files].keys.each do |file|
-      @pretty << "#{file.to_s.cyan}\n"
-
-      @metrics[:files][file].each do |line, data|
-        @pretty << "##{line}\t#{pretty_rate(data)}\t\e[3m#{data[:code].gray}\e[23m\n"
-      end
-
-      @pretty << "\n"
-    end
+    @metrics.queries << query
+    @metrics.files[file_name][line_number][:queries] << query
   end
 end

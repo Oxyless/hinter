@@ -5,9 +5,10 @@ For now it handle sql query analysis and show you where your queries are slow, o
 
 # How to use it
 
-## Basic usage
+## SQL Only
 
 ```ruby
+# sql only
 result = Hinter.watch do
   # some_code
 end
@@ -23,14 +24,32 @@ result.top_queries(42) # display n slow queries
 
 ![top_query](/assets/top_query.png)
 
-## Advanced usage
+## Ruby + SQL
+
+```ruby
+result = Hinter.new.watch(binding, source:
+	<<~RUBY
+		# some_code
+	RUBY
+)
+```
+
+![top_query](/assets/ruby_sql.png)
+
+
+## Options
 
 ```ruby
 result = Hinter.new(
-  file_pattern: my_file_pattern,
-  watch_dir: /\/app\//,
-  warning_time: 1,
-  critical_time: 5,
+	file_pattern: nil,
+	warning_time: 1,
+	critical_time: 5,
+	warning_sql_call: 10,
+	critical_sql_call: 100,
+	round_time: 2,
+	colors: true,
+	watch_dir: /\/app\//,
+	ignored: /(\/gems\/|\(pry\)|bin\/rails|hinter)/
 ).watch do
   # some_code
 end
@@ -44,6 +63,10 @@ end
 - **"watch_dir"** dir watched
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
+
+
+
+
 
 # Compatibility
 
