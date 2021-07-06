@@ -7,6 +7,8 @@ For now it handle sql query analysis and show you where your queries are slow, o
 
 ## SQL Only
 
+### Basic usage
+
 ```ruby
 # sql only
 result = Hinter.watch do
@@ -16,6 +18,8 @@ end
 
 ![example](/assets/example.png)
 
+### Display top queries
+
 ```ruby
 result.queries # get queries sort by time
 result.top_query # display slow query
@@ -24,14 +28,18 @@ result.top_queries(42) # display n slow queries
 
 ![top_query](/assets/top_query.png)
 
+### Expand callstack
+
 ```ruby
 result.expand(114) # callstack of #114
 ```
 
-![expand_callstack](/assets/expand_callstack)
+![expand_callstack](/assets/expand_callstack.png)
 
 
 ## Ruby + SQL
+
+### Basic usage
 
 ```ruby
 # does not work in console because block.source not avaialable
@@ -53,7 +61,11 @@ result = Hinter.new.watch(binding, source:
 result.expand(12) # sql analysis of #12
 ```
 
+### Expand sql
+
 ![expand_12](/assets/expand_12.png)
+
+### Display slow queries
 
 ```ruby
 result.slow(1) # display lines > 1s
@@ -63,6 +75,8 @@ result.slow(1) # display lines > 1s
 
 
 ## Options
+
+### Usage
 
 ```ruby
 result = Hinter.new(
@@ -79,6 +93,7 @@ result = Hinter.new(
   # some_code
 end
 ```
+### Options list
 
 - **"file_pattern"** file_pattern to\_watch as string
 - **"warning_time"** max query time seconds before warning color
