@@ -34,8 +34,13 @@ result = Hinter.new.watch(binding, source:
 )
 ```
 
-![top_query](/assets/ruby_sql.png)
+![ruby_sql](/assets/ruby_sql.png)
 
+```ruby
+result.expand(12) # sql analysis of #12
+```
+
+![expand_12](/assets/expand_12.png)
 
 ## Options
 
@@ -53,19 +58,18 @@ result = Hinter.new(
 ).watch do
   # some_code
 end
-
-result = Hinter.watch(my_file_pattern) do
-  # some_code
-end
 ```
 
 - **"file_pattern"** file_pattern to\_watch as string
-- **"watch_dir"** dir watched
+
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
-
-
-
+- **"warning_sql_call"** max same query call before warning color
+- **"critical_sql_call"** max same query call before warning color
+- **"round_time"** number of digit for time
+- **"colors"** enable colors 
+- **"watch_dir"** path watched
+- **"ignored"** path ignored
 
 
 # Compatibility
