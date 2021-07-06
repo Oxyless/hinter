@@ -59,7 +59,7 @@ module Helpers
 
       @metrics.queries.first(limit).each do |query|
         str_query = cyan("#{query[:file_name]}:#{query[:line]} \n")
-        str_query += italic(query[:code])
+        str_query += italic("#{query[:code]}\n")
         str_query += "(#{bold("#{query[:time].round(@options[:round_time])}s")}) #{gray(query[:sql])}\n"
         str_queries << str_query
       end
