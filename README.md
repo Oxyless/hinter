@@ -1,5 +1,7 @@
 # Hinter
 
+![hinter.png](/assets/hinter.png)
+
 Hinter aims to help developers to figure why some block of code is slow, from a rails console. 
 For now it handle sql query analysis and show you where your queries are slow, or too many.
 
