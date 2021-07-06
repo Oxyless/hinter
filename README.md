@@ -7,6 +7,12 @@ For now it handles ruby and sql query analysis and shows you where your queries 
 
 # How to use it
 
+## Installation
+
+```ruby
+gem "hinter", git: "https://github.com/Oxyless/hinter.git"
+```
+
 ## Ruby + SQL Analysis
 
 ### Basic usage
