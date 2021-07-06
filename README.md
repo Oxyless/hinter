@@ -42,7 +42,7 @@ result.expand(114) # callstack of #114
 ### Basic usage
 
 ```ruby
-# does not work in console because block.source not avaialable
+# does not work in console because block.source not available
 result = Hinter.new.watch(binding) do
 	# some_code
 end
