@@ -124,7 +124,7 @@ class Hinter
       end
 
       last_on_stack = callstack.first(1)[0]
-      last_on_stack = caller.last if !last_on_stack
+      last_on_stack = caller.first if !last_on_stack
 
       analyse_row!(data, time, last_on_stack, callstack.presence || caller)
 

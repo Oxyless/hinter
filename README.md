@@ -24,9 +24,22 @@ result.top_queries(42) # display n slow queries
 
 ![top_query](/assets/top_query.png)
 
+```ruby
+result.expand(114) # callstack of #114
+```
+
+![expand_callstack](/assets/expand_callstack)
+
+
 ## Ruby + SQL
 
 ```ruby
+# does not work in console because block.source not avaialable
+result = Hinter.new.watch(binding) do
+	# some_code
+end
+
+# works in console
 result = Hinter.new.watch(binding, source:
 	<<~RUBY
 		# some_code
@@ -41,6 +54,13 @@ result.expand(12) # sql analysis of #12
 ```
 
 ![expand_12](/assets/expand_12.png)
+
+```ruby
+result.slow(1) # display lines > 1s
+```
+
+![slow](/assets/slow.png)
+
 
 ## Options
 
@@ -61,7 +81,6 @@ end
 ```
 
 - **"file_pattern"** file_pattern to\_watch as string
-
 - **"warning_time"** max query time seconds before warning color
 - **"critical_time"** max query time seconds before critical color
 - **"warning_sql_call"** max same query call before warning color
