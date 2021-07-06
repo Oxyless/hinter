@@ -17,9 +17,9 @@ end
 
 # works in console
 result = Hinter.new.watch(binding, source:
-	<<~RUBY
-		# some_code
-	RUBY
+<<~RUBY
+	# some_code
+RUBY
 )
 ```
 
