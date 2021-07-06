@@ -5,7 +5,7 @@ For now it handle sql query analysis and show you where your queries are slow, o
 
 # How to use it
 
-## SQL Only
+## SQL Analysis
 
 ### Basic usage
 
@@ -37,7 +37,7 @@ result.expand(114) # callstack of #114
 ![expand_callstack](/assets/expand_callstack.png)
 
 
-## Ruby + SQL
+## Ruby + SQL Analysis
 
 ### Basic usage
 
