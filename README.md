@@ -2,8 +2,8 @@
 
 ![hinter.png](/assets/hinter.png)
 
-Hinter aims to help developers to figure why some block of code is slow, from a rails console. 
-For now it handle sql query analysis and show you where your queries are slow, or too many.
+Hinter aims to help developers figure out why some blocks of code are slow, from a rails console.
+For now it handles ruby and sql query analysis and shows you where your queries are slow, or where there are too many.
 
 # How to use it
 
