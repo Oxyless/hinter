@@ -5,38 +5,6 @@ For now it handle sql query analysis and show you where your queries are slow, o
 
 # How to use it
 
-## SQL Analysis
-
-### Basic usage
-
-```ruby
-# sql only
-result = Hinter.watch do
-  # some_code
-end
-```
-
-![example](/assets/example.png)
-
-### Display top queries
-
-```ruby
-result.queries # get queries sort by time
-result.top_query # display slow query
-result.top_queries(42) # display n slow queries
-```
-
-![top_query](/assets/top_query.png)
-
-### Expand callstack
-
-```ruby
-result.expand(114) # callstack of #114
-```
-
-![expand_callstack](/assets/expand_callstack.png)
-
-
 ## Ruby + SQL Analysis
 
 ### Basic usage
@@ -72,6 +40,38 @@ result.slow(1) # display lines > 1s
 ```
 
 ![slow](/assets/slow.png)
+
+
+## SQL Analysis
+
+### Basic usage
+
+```ruby
+# sql only
+result = Hinter.watch do
+  # some_code
+end
+```
+
+![example](/assets/example.png)
+
+### Display top queries
+
+```ruby
+result.queries # get queries sort by time
+result.top_query # display slow query
+result.top_queries(42) # display n slow queries
+```
+
+![top_query](/assets/top_query.png)
+
+### Expand callstack
+
+```ruby
+result.expand(114) # callstack of #114
+```
+
+![expand_callstack](/assets/expand_callstack.png)
 
 
 ## Options
