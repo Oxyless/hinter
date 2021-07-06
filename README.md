@@ -61,7 +61,7 @@ result = Hinter.new.watch(binding, source:
 result.expand(12) # sql analysis of #12
 ```
 
-### Expand sql
+### Expand SQL
 
 ![expand_12](/assets/expand_12.png)
 
