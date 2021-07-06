@@ -65,7 +65,7 @@ result.expand(12) # sql analysis of #12
 
 ![expand_12](/assets/expand_12.png)
 
-### Display slow queries
+### Display slow lines
 
 ```ruby
 result.slow(1) # display lines > 1s
