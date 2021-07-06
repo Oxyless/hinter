@@ -27,11 +27,11 @@ RUBY
 
 ![ruby_sql](/assets/ruby_sql.png)
 
+### Expand SQL
+
 ```ruby
 result.expand(12) # sql analysis of #12
 ```
-
-### Expand SQL
 
 ![expand_12](/assets/expand_12.png)
 
