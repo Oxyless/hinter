@@ -37,9 +37,11 @@ module Hinters
       instructions = []
       instruction = ""
       opened = 0
+      prev_token = ""
 
       tokens.each do |token|
         instruction += token
+
         case token
           when "if"
             opened += 1 if instruction.strip.size == 2
@@ -48,11 +50,13 @@ module Hinters
           when ")", "}", "]", "end"
             opened -= 1
           when "\n", ";"
-            if opened == 0 && instruction.strip.size > 0
+            if prev_token != "," && opened == 0 && instruction.strip.size > 0
               instructions << instruction.strip
               instruction = ""
             end
         end
+
+        prev_token = token
       end
 
       if instruction.strip.size > 0
