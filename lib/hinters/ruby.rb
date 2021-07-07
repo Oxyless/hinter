@@ -44,7 +44,7 @@ module Hinters
 
         case token
           when "if"
-            opened += 1 if instruction.strip.size == 2
+            opened += 1 if ["\n", ";", "=", "("].include?(prev_token)
           when "(", "{", "[", "case", "while", "for", "do", "def", "class", "module"
             opened += 1
           when ")", "}", "]", "end"
@@ -55,8 +55,8 @@ module Hinters
               instruction = ""
             end
         end
-
-        prev_token = token
+        
+        prev_token = token if token.delete(" ").size > 0
       end
 
       if instruction.strip.size > 0
