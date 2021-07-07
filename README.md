@@ -5,7 +5,7 @@
 Hinter aims to help developers figure out why some blocks of code are slow, from a rails console.
 For now it handles ruby and sql query analysis and shows you where your queries are slow, or where there are too many.
 
-# How to use it
+# Usage
 
 ## Installation
 
