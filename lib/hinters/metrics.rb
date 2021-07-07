@@ -14,6 +14,10 @@ module Hinters
       @round_time = round_time
     end
 
+    def sql_call
+      @global_sql_call
+    end
+
     def sql_rate_rounded
       (@global_time == 0 ? 0 : (@global_sql_time * 100 / @global_time).round(@round_time))
     end

@@ -20,18 +20,24 @@ gem "hinter", git: "https://github.com/Oxyless/hinter.git"
 ```ruby
 # does not work in console because block.source not available
 result = Hinter.new.watch(binding) do
-	# some_code
+	Log.count
+	puts 42
+	Brand.all.map(&:name)
+	a = 45
 end
 
 # works in console
 result = Hinter.new.watch(binding, source:
 <<~RUBY
-	# some_code
+	Log.count
+	puts 42
+	Brand.all.map(&:name)
+	a = 45
 RUBY
 )
 ```
 
-![ruby_sql](/assets/ruby_sql.png)
+![ruby_sql](/assets/ruby_sql_2.png)
 
 ### Expand SQL
 
