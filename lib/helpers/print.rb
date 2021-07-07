@@ -23,7 +23,7 @@ module Helpers
     end
 
     def pretty_rate(data)
-      total_section = "total: #{data[:total_time]}s"
+      total_section = "sql: #{data[:total_time]}s"
 
       total_section = if data[:total_time] > @options[:critical_time]
         red(total_section)
