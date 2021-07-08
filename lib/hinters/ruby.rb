@@ -25,11 +25,17 @@ module Hinters
         RUBY
       end
 
-      <<~RUBY
+      profiled_source = <<~RUBY
         __hinters = Hinters::List.new(#{to_params(@options)});
         #{instrumented_source.join("\n")};
         __hinters;
       RUBY
+
+      if @options[:debug]
+        puts green(profiled_source)
+      end
+
+      profiled_source
     end
 
     def to_instructions(code)

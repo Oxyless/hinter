@@ -22,7 +22,8 @@ class Hinter
     round_time: 2,
     colors: true,
     watch_dir: /\/app\//,
-    ignored: /(\/gems\/|\(pry\)|bin\/rails|hinter)/
+    ignored: /(\/gems\/|\(pry\)|bin\/rails|hinter)/,
+    debug: false
   )
     @old_logger = ActiveRecord::Base.logger
 
@@ -35,7 +36,8 @@ class Hinter
       round_time: round_time,
       colors: (colors == true),
       watch_dir: watch_dir,
-      ignored: ignored
+      ignored: ignored,
+      debug: debug
     }
 
     @started_at = nil
