@@ -2,7 +2,7 @@
 
 ![hinter.png](/assets/hinter.png)
 
-Console utility to help developers figure out why a blocks of code is slow:
+Console utility to help developers figure out why a block of code is slow:
 
 * Show ruby usage
 * Show active record usage
