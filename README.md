@@ -2,8 +2,10 @@
 
 ![hinter.png](/assets/hinter.png)
 
-Hinter aims to help developers figure out why some blocks of code are slow, from a rails console.
-For now it handles ruby and sql query analysis and shows you where your queries are slow, or where there are too many.
+Console utility to help developers figure out why a blocks of code is slow:
+
+* Show ruby usage
+* Show active record usage
 
 # Usage
 
@@ -13,20 +15,24 @@ For now it handles ruby and sql query analysis and shows you where your queries 
 gem "hinter", git: "https://github.com/Oxyless/hinter.git"
 ```
 
-## Ruby + SQL Analysis
+## Basic usage
 
-### Basic usage
+### From code
 
 ```ruby
-# does not work in console because block.source not available
 result = Hinter.new.watch(binding) do
 	Log.count
 	puts 42
 	Brand.all.map(&:name)
 	a = 45
 end
+```
 
-# works in console
+### From rails console
+
+Because ```block.source```is not available from console, so you have to comment evalued code.
+
+```ruby
 result = Hinter.new.watch(binding, source:
 <<~RUBY
 	Log.count
@@ -36,6 +42,8 @@ result = Hinter.new.watch(binding, source:
 RUBY
 )
 ```
+
+### Result
 
 ![ruby_sql](/assets/ruby_sql_2.png)
 
@@ -56,7 +64,7 @@ result.slow(1) # display lines > 1s
 ![slow](/assets/slow.png)
 
 
-## SQL Analysis
+## Active record analysis
 
 ### Basic usage
 
