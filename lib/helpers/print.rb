@@ -1,17 +1,19 @@
 module Helpers
   module Print
-    def refresh_pretty!
-      @pretty = "#{pretty_global}\n"
+    def to_s
+      pretty = "#{pretty_global}\n"
 
       @metrics.files.keys.each do |file|
-        @pretty << "#{file.to_s.cyan}\n"
+        pretty << "#{file.to_s.cyan}\n"
   
         @metrics.files[file].each do |line, data|
-          @pretty << "##{line}\t#{pretty_rate(data)}\t#{italic_gray(data[:code])}\n"
+          pretty << "##{line}\t#{pretty_rate(data)}\t#{italic_gray(data[:code])}\n"
         end
   
-        @pretty << "\n"
+        pretty << "\n"
       end
+
+      pretty
     end
 
     def pretty_global(short: false)

@@ -27,7 +27,7 @@ module Hinters
     end
 
     def global_time_rounded
-      @global_time.round(@round_time)
+      (@global_sql_time > @global_time ? @global_sql_time : @global_time.round(@round_time))
     end
 
     def sql_time_rounded

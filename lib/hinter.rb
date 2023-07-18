@@ -1,6 +1,7 @@
 require_relative "./helpers/print"
 require_relative "./helpers/utils"
 require_relative "./helpers/color"
+require_relative "./helpers/json"
 
 require_relative "./hinters/metrics"
 require_relative "./hinters/list"
@@ -12,6 +13,7 @@ class Hinter
   include Helpers::Print
   include Helpers::Utils
   include Helpers::Color
+  include Helpers::Json
   
   def initialize(
     file_pattern: nil,
@@ -88,7 +90,6 @@ class Hinter
     
       @metrics.global_time = (Time.current - @started_at)
       @metrics.enrich_data!
-      refresh_pretty!
 
       @started_at = nil
     end
@@ -100,10 +101,6 @@ class Hinter
     @callstacks[caller_id]
   end
 
-  def inspect
-    return @pretty
-  end
-
   private
 
   def watch_block(&block)
@@ -113,7 +110,6 @@ class Hinter
     end
 
     @metrics.enrich_data!
-    refresh_pretty!
   end
 
   def active_record_callback
