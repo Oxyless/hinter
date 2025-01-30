@@ -4,7 +4,7 @@ module Helpers
       pretty = "#{pretty_global}\n"
 
       @metrics.files.keys.each do |file|
-        pretty << "#{file.to_s.cyan}\n"
+        pretty << "#{cyan(file.to_s)}\n"
   
         @metrics.files[file].each do |line, data|
           pretty << "##{line}\t#{pretty_rate(data)}\t#{italic_gray(data[:code])}\n"
